@@ -58,9 +58,9 @@ public class FileService {
 				file.transferTo(distFile);
 				if("office".equals(FileUtils.getFileType(distFile))){
 					try {
-//						String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
-//						String documentId = FileUtils.getDocClient().createDocument(distFile, fileName, suffix).getDocumentId();
-						officeDao.addOffice("doc-hi2m3psn08i4smn", currentPath + File.separator + fileName);
+						String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+						String documentId = FileUtils.getDocClient().createDocument(distFile, fileName, suffix).getDocumentId();
+						officeDao.addOffice(documentId, FileUtils.MD5(distFile));
 					} catch (Exception e) {
 					}
 				}
@@ -452,7 +452,7 @@ public class FileService {
 		}
 	}
 
-	public String openOffice(String currentPath, String fileName, String fileType) throws Exception {
-		return officeDao.getOfficeId(currentPath + File.separator + fileName);
+	public String openOffice(HttpServletRequest request, String currentPath, String fileName) throws Exception {
+		return officeDao.getOfficeId(FileUtils.MD5(new File(getFileName(request, currentPath), fileName)));
 	}
 }

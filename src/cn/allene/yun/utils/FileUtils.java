@@ -1,6 +1,9 @@
 package cn.allene.yun.utils;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,6 +12,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.print.Doc;
+
+import org.apache.commons.io.IOUtils;
+import org.springframework.util.DigestUtils;
 
 import com.baidubce.BceClientConfiguration;
 import com.baidubce.auth.DefaultBceCredentials;
@@ -123,5 +129,16 @@ public class FileUtils {
 		    docClient = new DocClient(config);
 		}
 	    return docClient;
+	}
+	
+	public static String MD5(File file){
+		byte[] bys = null;
+		try {
+			bys = org.apache.commons.io.FileUtils.readFileToByteArray(file);
+			return DigestUtils.md5DigestAsHex(bys).toUpperCase();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

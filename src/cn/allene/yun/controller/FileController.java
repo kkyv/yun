@@ -180,7 +180,7 @@ public class FileController {
 	@RequestMapping("/openOffice")
 	public @ResponseBody Result<String> openOffice(String currentPath, String fileName, String fileType){
 		try {
-			String openOffice = fileService.openOffice(currentPath, fileName, fileType);
+			String openOffice = fileService.openOffice(request, currentPath, fileName);
 			if(openOffice != null){
 				Result<String> result = new Result<>(505, true, "打开成功");
 				result.setData(openOffice);
