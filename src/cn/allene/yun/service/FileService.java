@@ -240,7 +240,9 @@ public class FileService {
 			for (File filex : file.listFiles()) {
 				summaryFile innersF = summarylistFile(filex.getPath(), number);
 				if (!innersF.getisFile()) {
-					returnlist.add(innersF);
+					if(!innersF.getfileName().equals("recycle")){
+						returnlist.add(innersF);
+					}
 				}
 			}
 			sF.setListFile(returnlist);
