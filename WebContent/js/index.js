@@ -155,20 +155,25 @@ var currentPath;
 				check[i] = $(this).text();
 			});
 			//alert($id.parent().next().children().text());
-			
-			$.ajax({
-				type:"POST",
-				url:"file/delDirectory.action",
-				data:{
-					"currentPath":currentPath,
-					"directoryName":check
-				},
-				success:function(data){
-					layer.msg(data.msg);
-					getFiles(currentPath);
-				},
-				traditional:true
-			});
+			layer.confirm('确认删除？', {
+				  btn: ['确认','返回'] //按钮
+				}, function(){
+					$.ajax({
+						type:"POST",
+						url:"file/delDirectory.action",
+						data:{
+							"currentPath":currentPath,
+							"directoryName":check
+						},
+						success:function(data){
+							layer.msg(data.msg);
+							getFiles(currentPath);
+						},
+						traditional:true
+					});
+				}, function(){
+				  
+				});
 		}
 		return false;
 	}
