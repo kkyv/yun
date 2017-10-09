@@ -159,48 +159,25 @@
 		$(".addSrc").attr('src',"");
 	}
 	
-	function revertFile(){
-		var $oneFile = $("input[name='check_name']:checked");
-		var directoryName = new Array();
-		var targetPath = new Array();
-		if($oneFile.length < 1){
-			alert("请选择至少一个");
-		}else{
-			$.each($oneFile,function(i,n){
-				targetPath[i] = $(this).attr("filePath");
-				directoryName[i] = $(this).next().children('span').text();
-			});
-			$.ajax({
-				type:"POST",
-				url:"file/revertDirectory.action",
-				data:{
-					"targetdirectorypath":targetPath,
-					"directoryName":directoryName
-				},
-				success:function(data){
-					layer.msg(data.msg);
-					setTimeout('window.location.reload()',2500);
-				},
-				traditional:true
-			});
-		}
-		return false;
+	function revertFile(obj){
+		var id = $(obj).parent().parent().children(".oneCheck").attr("id");
+		$.post("file/revertDirectory.action", {"fileId":id}, function(data){
+			layer.msg(data.msg);
+			window.location.reload();
+		});
 	}
 	
 	function revertAllFiles(){
 		var $allFiles = $("input[name='check_name']:checked");
-		var directoryNames = new Array();
-		var targetPaths = new Array();
+		var fileId = new Array();
 		$.each($allFiles,function(i,n){
-			targetPaths[i] = $(this).attr("filePath");
-			directoryNames[i] = $(this).next().children('span').text();
+			fileId[i] = $(this).attr("id");
 		});
 		$.ajax({
 			type:"POST",
-			url:"file/revertAllDirectories.action",
+			url:"file/revertDirectory.action",
 			data:{
-				"targetdirectorypaths":targetPaths,
-				"directoryNames":directoryNames
+				"fileId":fileId,
 			},
 			success:function(data){
 				layer.msg(data.msg);
@@ -208,58 +185,41 @@
 			},
 			traditional:true
 		});
-		return false;
 	}
 	
 	function delAllFiles(){
-		var $del = $("input[name='check_name']:checked");
-		var checkName = new Array();
-		if($del.length < 1){
-			alert("请选择至少一个");
-		}else{
-			$.each($del,function(i,n){
-				checkName[i] = $(this).next().children('span').text();
-			});
-			$.ajax({
-				type:"POST",
-				url:"file/delRecycleDirectory.action",
-				data:{
-					"directoryName":checkName
-				},
-				success:function(data){
-					layer.msg(data.msg);
-					window.location.reload()
-				},
-				traditional:true
-			});
-		}
-		return false;
+		layer.confirm('确认清空回收站？', {
+			  btn: ['确认','返回'] //按钮
+			}, function(){
+				$.ajax({
+					type:"POST",
+					url:"file/delAllRecycle.action",
+					data:{
+					},
+					success:function(data){
+						layer.msg(data.msg);
+						window.location.reload()
+					},
+					traditional:true
+				});
+			}, function(){
+		});
 	}
 	
-	function delFile(){
-		var $del = $("input[name='check_name']:checked");
-		var checkName = new Array();
-		if($del.length < 1){
-			alert("请选择至少一个");
-		}else{
-			$.each($del,function(i,n){
-				checkName[i] = $(this).next().children('span').text();
-			});
-			$.ajax({
-				type:"POST",
-				url:"file/delRecycleDirectory.action",
-				data:{
-					"directoryName":checkName
-				},
-				success:function(data){
+	function delFile(obj){
+		layer.confirm('确认删除？', {
+			  btn: ['确认','返回'] //按钮
+			}, function(){
+				var id = $(obj).parent().parent().children(".oneCheck").attr("id");
+				$.post("file/delRecycle.action", {"fileId":id}, function(data){
 					layer.msg(data.msg);
-					window.location.reload()
-				},
-				traditional:true
-			});
-		}
-		return false;
+					window.location.reload();
+				});
+			}, function(){
+		});
 	}
+	
+// 	function 
 	
 	$(document).ready(function(){
 		
@@ -303,7 +263,7 @@
 	</script>
 	<body>
 		<c:choose>
-			<c:when test="${requestScope.findDelFile == null}">
+			<c:when test="${findDelFile == null}">
 				<div id="empty" style="display:block;">
 					<img src="img/empty.png" />
 					<p style="margin-bottom:20px;color: #878C8D;">您的回收站为空噢~</p>
@@ -318,7 +278,7 @@
 					</span>
 				</div>
 			</c:when>
-			<c:when test="${requestScope.findDelFile != null}">
+			<c:when test="${findDelFile != null}">
 				<div style="display:block" id="collection">
 					<ul>
 						<li id="list-info" class="list-border"><span class="para" id="warn">提示:回收站不占用网盘空间，文件保存10天后
@@ -326,7 +286,7 @@
 						<a href="#" style="color: #3B8CFF;">开通超级会员</a>延长至30天</span>
 						<span class="para" id="clean">
 							<img src="img/delete.png"/>
-							<span style="cursor: pointer;" onclick="return delAllFiles()">清空回收站</span>
+							<span style="cursor: pointer;" onclick="delAllFiles()">清空回收站</span>
 						</span>
 						</li>
 						<li class="list-collection" style="display: none">
@@ -347,22 +307,22 @@
 									<span style="float: left;">已选中</span>
 									<span style="float: left;" id="num">1</span>个文件/文件夹
 								</span>
-								<span class="para1" id="revert" style="margin-top:4px;float: left;margin-left: 1.5%;">
+								<span  onclick="revertAllFiles()" class="para1" id="revert" style="margin-top:4px;float: left;margin-left: 1.5%;">
 									<img src="img/refresh1.png"/>
-									<span style="cursor: pointer;" onclick="return revertAllFiles()">还原</span>
+									<span style="cursor: pointer;">还原</span>
 								</span>
 							</div>
 						</li>
-						<c:forEach items="${requestScope.findDelFile}" var="delFile" varStatus="index">
+						<c:forEach items="${findDelFile}" var="delFile" varStatus="index">
 							<li class="list-tr" class="list-border" style="cursor:pointer;" onmouseover="mouseOver(${index.index})" onmouseout="mouseOut()">
-								<input type="checkbox" class="oneCheck" name="check_name" filePath="${delFile.filePath}"/>
+								<input type="checkbox" class="oneCheck" name="check_name" id="${delFile.fileId }"/>
 								<span style="width: 49%;height:100%;float:left;">
 									<img style="float: left;margin: 3px 4px 0 5px;" src="img/picture.png" />
 									<span style="float:left;">${delFile.fileName }</span>
 								</span>
 								<span style="float:left;margin-top: 0.5%;width:5%;">
-										<img style="float:left" class="addSrc" src="" onclick="return revertFile()"/>
-										<img style="float: left;margin-left: 10px;" onclick="return delFile()" class="addSrc" src="" />
+										<img style="float:left" class="addSrc" src="" onclick="revertFile(this)"/>
+										<img style="float: left;margin-left: 10px;" onclick="delFile(this)" class="addSrc" src="" />
 								</span>
 								<span style="width: 15%;height:100%;float:left;">${delFile.fileSize }</span>
 								<span style="width: 16%;height:100%;float:left">${delFile.lastTime }</span>
