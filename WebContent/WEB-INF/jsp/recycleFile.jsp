@@ -160,22 +160,22 @@
 	}
 	
 	function revertFile(){
-		var $del = $("input[name='check_name']:checked");
-		var checkName = new Array();
-		var check = new Array();
-		if($del.length < 1){
+		var $oneFile = $("input[name='check_name']:checked");
+		var directoryName = new Array();
+		var targetPath = new Array();
+		if($oneFile.length < 1){
 			alert("请选择至少一个");
 		}else{
-			$.each($del,function(i,n){
-				check[i] = $(this).attr("filePath");
-				checkName[i] = $(this).next().children('span').text();
+			$.each($oneFile,function(i,n){
+				targetPath[i] = $(this).attr("filePath");
+				directoryName[i] = $(this).next().children('span').text();
 			});
 			$.ajax({
 				type:"POST",
 				url:"file/revertDirectory.action",
 				data:{
-					"targetdirectorypath":check,
-					"directoryName":checkName
+					"targetdirectorypath":targetPath,
+					"directoryName":directoryName
 				},
 				success:function(data){
 					layer.msg(data.msg);
@@ -187,22 +187,68 @@
 		return false;
 	}
 	
-	function delFile(){
+	function revertAllFiles(){
+		var $allFiles = $("input[name='check_name']:checked");
+		var directoryNames = new Array();
+		var targetPaths = new Array();
+		$.each($allFiles,function(i,n){
+			targetPaths[i] = $(this).attr("filePath");
+			directoryNames[i] = $(this).next().children('span').text();
+		});
+		$.ajax({
+			type:"POST",
+			url:"file/revertAllDirectories.action",
+			data:{
+				"targetdirectorypaths":targetPaths,
+				"directoryNames":directoryNames
+			},
+			success:function(data){
+				layer.msg(data.msg);
+				setTimeout('window.location.reload()',2500);
+			},
+			traditional:true
+		});
+		return false;
+	}
+	
+	function delAllFiles(){
 		var $del = $("input[name='check_name']:checked");
 		var checkName = new Array();
-		var check = new Array();
 		if($del.length < 1){
 			alert("请选择至少一个");
 		}else{
 			$.each($del,function(i,n){
-				check[i] = $(this).attr("filePath");
 				checkName[i] = $(this).next().children('span').text();
 			});
 			$.ajax({
 				type:"POST",
 				url:"file/delRecycleDirectory.action",
 				data:{
-					"filePath":check,
+					"directoryName":checkName
+				},
+				success:function(data){
+					layer.msg(data.msg);
+					window.location.reload()
+				},
+				traditional:true
+			});
+		}
+		return false;
+	}
+	
+	function delFile(){
+		var $del = $("input[name='check_name']:checked");
+		var checkName = new Array();
+		if($del.length < 1){
+			alert("请选择至少一个");
+		}else{
+			$.each($del,function(i,n){
+				checkName[i] = $(this).next().children('span').text();
+			});
+			$.ajax({
+				type:"POST",
+				url:"file/delRecycleDirectory.action",
+				data:{
 					"directoryName":checkName
 				},
 				success:function(data){
@@ -280,7 +326,7 @@
 						<a href="#" style="color: #3B8CFF;">开通超级会员</a>延长至30天</span>
 						<span class="para" id="clean">
 							<img src="img/delete.png"/>
-							<span style="cursor: pointer;" onclick="return delFile()">清空回收站</span>
+							<span style="cursor: pointer;" onclick="return delAllFiles()">清空回收站</span>
 						</span>
 						</li>
 						<li class="list-collection" style="display: none">
@@ -303,13 +349,13 @@
 								</span>
 								<span class="para1" id="revert" style="margin-top:4px;float: left;margin-left: 1.5%;">
 									<img src="img/refresh1.png"/>
-									<span style="cursor: pointer;" onclick="return revertFile()">还原</span>
+									<span style="cursor: pointer;" onclick="return revertAllFiles()">还原</span>
 								</span>
 							</div>
 						</li>
 						<c:forEach items="${requestScope.findDelFile}" var="delFile" varStatus="index">
 							<li class="list-tr" class="list-border" style="cursor:pointer;" onmouseover="mouseOver(${index.index})" onmouseout="mouseOut()">
-								<input type="checkbox" class="oneCheck" name="check_name" filePath="${delFile.filePath}" currentPath="${delFile.currentPath }"/>
+								<input type="checkbox" class="oneCheck" name="check_name" filePath="${delFile.filePath}"/>
 								<span style="width: 49%;height:100%;float:left;">
 									<img style="float: left;margin: 3px 4px 0 5px;" src="img/picture.png" />
 									<span style="float:left;">${delFile.fileName }</span>

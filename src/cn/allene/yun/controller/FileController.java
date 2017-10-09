@@ -197,21 +197,32 @@ public class FileController {
 	/* --删除回收站文件--
 	 * --获取当前路径以及文件名--*/
 	@RequestMapping("/delRecycleDirectory")
-	public @ResponseBody Result<String> delRecycleDirectory(String filePath[] ,String[] directoryName){
+	public @ResponseBody Result<String> delRecycleDirectory(String[] directoryName){
 		try {
-			fileService.delRecycleDirectory(request, filePath[0],directoryName);
+			fileService.delRecycleDirectory(request,directoryName);
 			return new Result<>(327, true, "删除成功");
 		} catch (Exception e) {
 			return new Result<>(322, false, "删除失败");
 		}
 	}
 	
-	/* --还原回收站文件--
+	/* --还原一个回收站文件--
 	 * --获取目的路径以及文件名--*/
 	@RequestMapping("/revertDirectory")
 	public @ResponseBody Result<String> revertDirectory(String[] directoryName, String targetdirectorypath){
 		try {
 			fileService.moveDirectory(request,User.RECYCLE,directoryName,targetdirectorypath);
+			return new Result<>(327, true, "还原成功");
+		} catch (Exception e) {
+			return new Result<>(322, false, "还原失败");
+		}
+	}
+	
+	/*--还原多个回收站文件--*/
+	@RequestMapping("/revertAllDirectories")
+	public @ResponseBody Result<String> revertAllDirectories(String[] directoryNames, String[] targetdirectorypaths){
+		try {
+			fileService.moveAllDirectories(request,User.RECYCLE,directoryNames,targetdirectorypaths);
 			return new Result<>(327, true, "还原成功");
 		} catch (Exception e) {
 			return new Result<>(322, false, "还原失败");
