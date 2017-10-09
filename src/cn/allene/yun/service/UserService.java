@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import cn.allene.yun.dao.UserDao;
 import cn.allene.yun.pojo.User;
+import cn.allene.yun.utils.UserUtils;
 
 @Service
 public class UserService {
@@ -13,6 +14,7 @@ public class UserService {
 
 	public User findUser(User user) {
 		try {
+			user.setPassword(UserUtils.MD5(user.getPassword()));
 			User exsitUser = userDao.findUser(user);
 			return exsitUser;
 		} catch (Exception e) {
@@ -23,6 +25,7 @@ public class UserService {
 	
 	public boolean addUser(User user){
 		try {
+			user.setPassword(UserUtils.MD5(user.getPassword()));
 			userDao.addUser(user);
 		} catch (Exception e) {
 			e.printStackTrace();

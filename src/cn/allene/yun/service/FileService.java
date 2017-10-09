@@ -9,9 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -23,9 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.baidubce.services.doc.model.CreateDocumentResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import cn.allene.yun.dao.OfficeDao;
 import cn.allene.yun.dao.UserDao;
 import cn.allene.yun.pojo.FileCustom;
+import cn.allene.yun.pojo.Result;
 import cn.allene.yun.pojo.User;
 import cn.allene.yun.pojo.summaryFile;
 import cn.allene.yun.utils.FileUtils;
@@ -37,7 +39,6 @@ public class FileService {
 	public static final String[] DEFAULT_DIRECTORY = { "vido", "music", "source", "image", User.RECYCLE};
 	/*--删除前路径--*/
 	public static String prePath = null;
-	public static Map<String,String> fileAndPath = new HashMap<String,String>();
 	@Autowired
 	private UserDao userDao;
 	
@@ -45,7 +46,6 @@ public class FileService {
 	public List<FileCustom> recycleFile(HttpServletRequest request) throws Exception{
 		return listFile(getFileName(request, User.RECYCLE));
 	}
-	/*--返回所有删除文件的之前路径--*/
 	
 	public void uploadFilePath(HttpServletRequest request, MultipartFile[] files, String currentPath) throws Exception {
 		for (MultipartFile file : files) {
@@ -58,7 +58,7 @@ public class FileService {
 					try {
 //						String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
 //						String documentId = FileUtils.getDocClient().createDocument(distFile, fileName, suffix).getDocumentId();
-						officeDao.addOffice("doc-hi2m3psn08i=4smn", currentPath + File.separator + fileName);
+						officeDao.addOffice("doc-hi2m3psn08i4smn", currentPath + File.separator + fileName);
 					} catch (Exception e) {
 					}
 				}
@@ -167,7 +167,7 @@ public class FileService {
 					custom.setFileName(file.getName());
 					custom.setLastTime(FileUtils.formatTime(file.lastModified()));
 					/*保存文件的删除前路径以及当前路径*/
-					custom.setFilePath(fileAndPath.get(file.getName()));
+					custom.setFilePath(prePath);
 					custom.setCurrentPath(realPath);
 					if (file.isDirectory()) {
 						custom.setFileSize("-");
@@ -257,9 +257,9 @@ public class FileService {
 	}
 	
 	/*--依次遍历recycle下各个文件，并删除--*/
-	public void delRecycleDirectory(HttpServletRequest request, String[] directoryName) throws Exception{	
+	public void delRecycleDirectory(HttpServletRequest request, String currentPath, String[] directoryName) throws Exception{	
 		for (String delName : directoryName) {
-			File srcFile = new File(getFileName(request, User.RECYCLE) + File.separator + delName);
+			File srcFile = new File(currentPath + File.separator + delName);
 			delFile(srcFile);
 		}
 		reSize(request);
@@ -267,9 +267,7 @@ public class FileService {
 	
 	public void delDirectory(HttpServletRequest request, String currentPath, String[] directoryName) throws Exception {
 		/*--获取文件删除前的路径--*/
-		for(String delName : directoryName){
-			fileAndPath.put(delName, currentPath);
-		}
+		prePath = currentPath;
 		/*--将删除文件移动到recycle目录下*/
 		moveDirectory(request,currentPath,directoryName,User.RECYCLE);
 		reSize(request);
@@ -338,35 +336,6 @@ public class FileService {
 		}
 	}
 
-	public void moveAllDirectories(HttpServletRequest request, String currentPath, String[] directoryName,
-			String[] targetdirectorypath) throws Exception{
-		int cir = 0;
-		for (String srcName : directoryName) {
-			File srcFile = new File(getFileName(request, currentPath), srcName);
-			File targetFile = new File(getFileName(request, targetdirectorypath[cir]), srcName);
-			cir++;
-			/* 处理目标目录中存在同名文件或文件夹问题 */
-			if (srcFile.isDirectory()) {
-				if (targetFile.exists()) {
-					for (int i = 1; !targetFile.mkdir(); i++) {
-						targetFile = new File(targetFile.getParentFile(), srcName + "(" + i + ")");
-					}
-					;
-				}
-			} else {
-				if (targetFile.exists()) {
-					for (int i = 1; !targetFile.createNewFile(); i++) {
-						targetFile = new File(targetFile.getParentFile(), srcName + "(" + i + ")");
-					}
-				}
-			}
-
-			/* 移动即先复制，再删除 */
-			copyfile(srcFile, targetFile);
-			delFile(srcFile);
-		}
-	}
-	
 	public void moveDirectory(HttpServletRequest request, String currentPath, String[] directoryName,
 			String targetdirectorypath) throws Exception {
 		// TODO Auto-generated method stub

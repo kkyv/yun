@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OfficeDao {
-	void addOffice(@Param("officeId") String officeId, @Param("officePath") String officePath) throws Exception;
+	void addOffice(@Param("officeId") String officeId, @Param("officeMd5") String officeMd5) throws Exception;
 	
-	String getOfficeId(String officePath) throws Exception;
+	String getOfficeId(String officeMd5) throws Exception;
 }
