@@ -24,7 +24,7 @@ import cn.allene.yun.pojo.FileCustom;
 import cn.allene.yun.pojo.RecycleFile;
 import cn.allene.yun.pojo.Result;
 import cn.allene.yun.pojo.User;
-import cn.allene.yun.pojo.summaryFile;
+import cn.allene.yun.pojo.SummaryFile;
 import cn.allene.yun.service.FileService;
 
 @Controller
@@ -35,7 +35,12 @@ public class FileController {
 
 	@Autowired
 	private FileService fileService;
-
+	/**
+	 * 文件上传
+	 * @param	files		文件名（多个）
+	 * @param currentPath	当前路径
+	 * @return				Json对象
+	 */
 	@RequestMapping("/upload")
 	public @ResponseBody Result<String> upload(@RequestParam("files") MultipartFile[] files, String currentPath) {
 			try {
@@ -45,7 +50,13 @@ public class FileController {
 			}
 			return new Result<String>(305, true, "上传成功");
 	}
-
+	/**
+	 * 文件下载
+	 * @param currentPath	当前路径
+	 * @param downPath		文件名
+	 * @param username		用户名
+	 * @return				文件下载流
+	 */
 	@RequestMapping("/download")
 	public ResponseEntity<byte[]> download(String currentPath, String[] downPath, String username) {
 		try {
@@ -63,7 +74,11 @@ public class FileController {
 			return null;
 		}
 	}
-
+	/**
+	 * 获取文件列表
+	 * @param path	路径
+	 * @return		Json对象
+	 */
 	@RequestMapping("/getFiles")
 	public @ResponseBody Result<List<FileCustom>> getFiles(String path) {
 		String realPath = fileService.getFileName(request, path);
@@ -72,6 +87,7 @@ public class FileController {
 		result.setData(listFile);
 		return result;
 	}
+/*
 	@RequestMapping("/getFilesByCategory")
 	public @ResponseBody Result<List<FileCustom>> getFilesByCategory(String category) {
 		String realPath = fileService.getFileName(request, category);
@@ -80,6 +96,13 @@ public class FileController {
 		result.setData(listFile);
 		return result;
 	} 
+*/
+	/**
+	 * 获取分享文件列表
+	 * @param path		路径
+	 * @param username	用户名
+	 * @return			Json对象
+	 */
 	@RequestMapping("/getShareFiles")
 	public @ResponseBody Result<List<FileCustom>> getFiles(String path, String username) {
 		String realPath = fileService.getFileName(request, path, username);
@@ -88,6 +111,12 @@ public class FileController {
 		result.setData(listFile);
 		return result;
 	}
+	/**
+	 * 新建文件夹
+	 * @param currentPath	当前路径
+	 * @param directoryName	文件夹名
+	 * @return	Json对象
+	 */
 	@RequestMapping("/addDirectory")
 	public @ResponseBody Result<String> addDirectory(String currentPath, String directoryName){
 		try {
@@ -97,7 +126,12 @@ public class FileController {
 			return new Result<>(331, false, "添加失败");
 		}
 	}
-	
+	/**
+	 * 删除文件夹
+	 * @param currentPath	当前路径
+	 * @param directoryName	文件夹名
+	 * @return				Json对象
+	 */
 	@RequestMapping("/delDirectory")
 	public @ResponseBody Result<String> delDirectory(String currentPath, String[] directoryName){
 		try {
@@ -108,8 +142,13 @@ public class FileController {
 			return new Result<>(341, false, "删除失败");
 		}
 	}
-	//测试test分支pull requst
-	//测试test分支pull requst2
+	/**
+	 * 重命名文件夹
+	 * @param currentPath	当前路径
+	 * @param srcName		源文件名
+	 * @param destName		目标文件名
+	 * @return				Json对象
+	 */
 	@RequestMapping("/renameDirectory")
 	public @ResponseBody Result<String> renameDirectory(String currentPath, String srcName, String destName){
 		try {
@@ -119,30 +158,44 @@ public class FileController {
 			return new Result<>(351, false, "重命名失败");
 		}
 	}
-	
+	/**
+	 * 移动文件夹
+	 * @param currentPath			当前路径
+	 * @param directoryName			文件夹名
+	 * @param targetdirectorypath	目标位置
+	 * @return						Json对象
+	 */
 	@RequestMapping("/moveDirectory")
-	public @ResponseBody Result<String> moveDirectory(String currentPath, String[] directoryName, String targetdirectorypath) throws Exception{
+	public @ResponseBody Result<String> moveDirectory(String currentPath, String[] directoryName, String targetdirectorypath){
 		
 		try {
 			fileService.moveDirectory(request,currentPath, directoryName, targetdirectorypath);
 			return new Result<>(366, true, "移动成功");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			return new Result<>(361, true, "移动失败");
 		}
 	}
-	
+	/**
+	 * 请求移动文件夹页面
+	 * @param model	模型
+	 * @return		页面逻辑视图名
+	 */
 	@RequestMapping("/summarylist")
 	/*如果方法声明了注解@ResponseBody ，则会直接将返回值输出到页面。*/
-	public String summarylist(Model model) throws ServletException, IOException{
+	public String summarylist(Model model){
 		String webrootpath = fileService.getFileName(request, "");
 		int number = webrootpath.length();
-		summaryFile rootlist = fileService.summarylistFile(webrootpath,number);
+		SummaryFile rootlist = fileService.summarylistFile(webrootpath,number);
 		model.addAttribute("rootlist", rootlist);
-//		request.setAttribute("summarylist", listFile);
-//		request.getRequestDispatcher("/WEB-INF/jsp/summarylist.jsp").forward(request, response);
 		return "summarylist";
 	}
-	
+	/**
+	 * 查找文件（模糊查询）
+	 * @param reg			要查找的文件名
+	 * @param currentPath	当面路径
+	 * @param regType		查找文件类型
+	 * @return				Json对象
+	 */
 	@RequestMapping("/searchFile")
 	public @ResponseBody Result<List<FileCustom>> searchFile(String reg, String currentPath, String regType){
 		try{
@@ -155,6 +208,13 @@ public class FileController {
 			return new Result<>(371, false, "查找失败");
 		}
 	}
+	/**
+	 * 打开文件
+	 * @param response		响应文件流
+	 * @param currentPath	当前路径
+	 * @param fileName		文件名
+	 * @param fileType		文件类型
+	 */
 	@RequestMapping("/openFile")
 	public void openFile(HttpServletResponse response,String currentPath, String fileName, String fileType){
 		try {
@@ -163,16 +223,30 @@ public class FileController {
 			e.printStackTrace();
 		}
 	}
+	/**
+	 * 请求音乐播放页面
+	 * @param model
+	 * @param currentPath	当面路径
+	 * @param fileName		文件名
+	 * @return
+	 */
 	@RequestMapping("/openAudioPage")
 	public String openAudioPage(Model model, String currentPath, String fileName){
 		model.addAttribute("currentPath", currentPath);
 		model.addAttribute("fileName", fileName);
 		return "audio";
 	}
+	/**
+	 * 打开文档	
+	 * @param currentPath	当面路径
+	 * @param fileName		文件名
+	 * @param fileType		文件类型
+	 * @return				Json对象（文件Id）
+	 */
 	@RequestMapping("/openOffice")
 	public @ResponseBody Result<String> openOffice(String currentPath, String fileName, String fileType){
 		try {
-			String openOffice = fileService.openOffice(currentPath, fileName, fileType);
+			String openOffice = fileService.openOffice(request, currentPath, fileName);
 			if(openOffice != null){
 				Result<String> result = new Result<>(505, true, "打开成功");
 				result.setData(openOffice);

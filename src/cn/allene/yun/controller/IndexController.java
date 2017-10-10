@@ -14,7 +14,11 @@ import cn.allene.yun.utils.UserUtils;
 public class IndexController {
 	@Autowired
 	private UserService userService;
-	
+	/**
+	 * 主页面页面
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping("/index")
 	public String index(HttpServletRequest request){
 		String username = UserUtils.getUsername(request);

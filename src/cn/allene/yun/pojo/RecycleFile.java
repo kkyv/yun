@@ -1,5 +1,9 @@
 package cn.allene.yun.pojo;
-
+/**
+ * 回收站文件实体类
+ * @author Frank
+ *
+ */
 public class RecycleFile extends FileCustom {
 	private Integer fileId;
 

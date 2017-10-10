@@ -1,5 +1,10 @@
 package cn.allene.yun.pojo;
-
+/**
+ * Json对象实体类
+ * @author Frank
+ *
+ * @param <T>
+ */
 public class Result<T> {
 	private int code;
 	private boolean success;

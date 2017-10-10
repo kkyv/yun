@@ -1,14 +1,16 @@
 package cn.allene.yun.pojo;
 
 import java.util.List;
-
-
-public class summaryFile {
+/**
+ * 移动/复制文件实体类
+ *
+ */
+public class SummaryFile {
 	private boolean isFile;
 	private String path;
 	private String fileName;
 	private int listdiretory;
-	private List<summaryFile> listFile;
+	private List<SummaryFile> listFile;
 	public boolean getisFile() {
 		return isFile;
 	}
@@ -27,10 +29,10 @@ public class summaryFile {
 	public void setfileName(String fileName) {
 		this.fileName = fileName;
 	}
-	public List<summaryFile> getListFile() {
+	public List<SummaryFile> getListFile() {
 		return listFile;
 	}
-	public void setListFile(List<summaryFile> listFile) {
+	public void setListFile(List<SummaryFile> listFile) {
 		this.listFile = listFile;
 	}
 	public int getListdiretory() {
@@ -39,9 +41,4 @@ public class summaryFile {
 	public void setListdiretory(int listdiretory) {
 		this.listdiretory = listdiretory;
 	}
-	
-	
-	
-	
-	
 }

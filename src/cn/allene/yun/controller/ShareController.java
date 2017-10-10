@@ -18,6 +18,12 @@ import cn.allene.yun.service.ShareService;
 public class ShareController {
 	@Autowired
 	private ShareService shareService;
+	/**
+	 * 链接文件分享页面
+	 * @param request
+	 * @param shareUrl
+	 * @return
+	 */
 	@RequestMapping("/share")
 	public String share(HttpServletRequest request, String shareUrl){
 		try {
@@ -28,6 +34,12 @@ public class ShareController {
 		}
 		return "share";
 	}
+	/**
+	 * 按状态查找分享
+	 * @param request
+	 * @param status	状态 1|2|-1
+	 * @return
+	 */
 	@RequestMapping("/searchShare")
 	public @ResponseBody Result<List<ShareFile>> searchShare(HttpServletRequest request, int status){
 		try {
@@ -40,6 +52,13 @@ public class ShareController {
 			return new Result<>(411, false, "获取失败");
 		}
 	}
+	/**
+	 * 分享文件
+	 * @param request
+	 * @param currentPath	当前路径
+	 * @param shareFile		分享文件名
+	 * @return
+	 */
 	@RequestMapping("/shareFile")
 	public @ResponseBody Result<String> shareFile(HttpServletRequest request, String currentPath, String[] shareFile){
 		try {
@@ -52,6 +71,13 @@ public class ShareController {
 			return new Result<>(401, false, "分享失败");
 		}
 	}
+	/**
+	 * 取消分享
+	 * @param url		链接url
+	 * @param filePath	文件路径
+	 * @param status	状态
+	 * @return
+	 */
 	@RequestMapping("/cancelShare")
 	public @ResponseBody Result<String> cancelShare(String url, String filePath, int status){
 		try {

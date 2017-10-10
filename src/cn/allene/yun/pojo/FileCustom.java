@@ -1,6 +1,9 @@
 package cn.allene.yun.pojo;
-
-
+/**
+ * 文件对象实体类
+ * @author Frank
+ *
+ */
 public class FileCustom {
 	private String fileName;
 	private String fileType;

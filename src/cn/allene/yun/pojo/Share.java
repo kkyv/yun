@@ -1,5 +1,9 @@
 package cn.allene.yun.pojo;
-
+/**
+ * 分享表映射
+ * @author Frank
+ *
+ */
 public class Share {
 	public static final int PUBLIC = 1;
 	public static final int PRIVATE = 2;

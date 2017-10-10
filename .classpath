@@ -56,7 +56,5 @@
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="E:/eclipse/plugins/javax.servlet.jsp_2.2.0.v201112011158.jar"/>
-	<classpathentry kind="lib" path="E:/eclipse/plugins/javax.servlet_3.1.0.v201410161800.jar"/>
 	<classpathentry kind="output" path="WebContent/WEB-INF/classes"/>
 </classpath>

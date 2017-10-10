@@ -40,12 +40,12 @@
 			$inputs = $("input[name='check_name']");
 			$("#checkAll").prop("checked", $inputs.filter(":checked").length == $inputs.length);
 		}
-		
+	/**获取文件列表*/
 	function getFiles(path) {
 		$.post("file/getShareFiles.action",
 			{
 				"path" : path,
-				"username" : "1234"
+				"username" : username
 			},function(data) {
 				if (data.success) {
 					currentPath = path;
@@ -62,6 +62,7 @@
 				}
 		});
 	}
+	/**进入文件夹*/
 	function preDirectory(obj) {
 		if ($(obj).attr("fileType") == "folder-open") {
 			var prePath = $(obj).attr("prepath");
@@ -72,24 +73,25 @@
 			}else{
 				path = prePath + "\\" + name;
 			}
-			alert(path);
 			getFiles(path);
 			navPath(path, name);
 		}
 		return false;
 	}
+	/**导航点击*/
 	function theClick(obj) {
 		getFiles($(obj).attr("path"));
 		$(obj).nextAll().remove();
 		return false;
 	}
-
+	/**导航栏添加导航*/
 	function navPath(path, currentPath) {
 		$("#navPath").append(
 				'<a href="#" path="' + path
 						+ '" onclick="return theClick(this)">&nbsp;'
 						+ currentPath + '&nbsp;&#62;</a>');
 	}
+	/**当前分享文件首页*/
 	function allFile() {
 		window.location.reload();
 		return false;
@@ -109,11 +111,6 @@
 			$download.removeAttr("checked");
 		}else{
 			return download(obj, downPath);
-// 			url += downPath;
-// 			alert(currentPath);
-// 			alert(url);
-// 			$(obj).attr("href", url);
-// 			return true;
 		}
 	}
 	function downloadFile(obj){
@@ -190,16 +187,10 @@
 			<div class="panel panel-default"
 				style="float: right; margin-right: 20px; width: 17%">
 				<div class="panel-body">
-					Basic panel example<br> Basic panel example<br> Basic
-					panel example<br> Basic panel example<br> Basic panel
-					example<br> Basic panel example<br> Basic panel example<br>
-					Basic panel example<br> Basic panel example<br> Basic
-					panel example<br> Basic panel example<br> Basic panel
-					example<br> Basic panel example<br> Basic panel example<br>
-					Basic panel example<br> Basic panel example<br> Basic
-					panel example<br> Basic panel example<br> Basic panel
-					example<br>
-
+					 <br>  <br> <br>  <br>
+					 <br>  <br> <br>  <br>
+					<br>  <br>  <br>
+					 <br>  <br> <br>  <br> <br>
 				</div>
 			</div>
 		</div>

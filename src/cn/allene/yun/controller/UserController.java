@@ -19,7 +19,12 @@ public class UserController {
 	
 	@Autowired
 	private FileService fileService;
-	
+	/**
+	 * 登录
+	 * @param request
+	 * @param user
+	 * @return
+	 */
 	@RequestMapping("/login")
 	public String login(HttpServletRequest request, User user){
 		User exsitUser = userService.findUser(user);
@@ -33,6 +38,12 @@ public class UserController {
 			return "login";
 		}
 	}
+	/**
+	 * 注册
+	 * @param request
+	 * @param user
+	 * @return
+	 */
 	@RequestMapping("/regist")
 	public String regist(HttpServletRequest request, User user){
 		if(user.getUsername() == null || user.getPassword() == null){
@@ -48,6 +59,11 @@ public class UserController {
 			}
 		}
 	}
+	/**
+	 * 登出
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping("/logout")
 	public String logout(HttpServletRequest request){
 		request.getSession().invalidate();

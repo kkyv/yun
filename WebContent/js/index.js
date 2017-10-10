@@ -1,3 +1,4 @@
+/**当前文件路径指针*/
 var currentPath;
 	$(document).ready(function() {
 		getFiles("\\");
@@ -5,7 +6,6 @@ var currentPath;
 		//全选
 		$("#checkAll").click(function () {
 				$("input[name='check_name']").prop("checked", $(this).prop("checked"));
-// 				$("#operation").toggle();
 				if($(this).prop("checked")){
 					$("#operation").show();
 				}else{
@@ -24,7 +24,7 @@ var currentPath;
 			$("#operation").hide();
 		}
 	}
-	//计算容量百分比
+	/**计算容量百分比*/
 	function countPercent(){
 		var countSize = $("#countSize").text();
 		var totalSize = $("#totalSize").text();
@@ -46,10 +46,8 @@ var currentPath;
 		var percent = Math.round(countSizeNum * 100 / totalSizeNum) + "%";
 		$("#sizeprogress").css("width", percent).attr("aria-valuemax", totalSizeNum).text(percent);
 	}
-  
+	/**获取文件列表*/
 	function getFiles(path) {
-// 		var oldPath = $("#list").attr("currentPath");
-// 		var newPath = oldPath + "\\" + path;
 		$.post("file/getFiles.action", {
 			"path" : path
 		}, function(data) {
@@ -57,8 +55,6 @@ var currentPath;
 				currentPath = path;
 				$("#list").empty();
 				$("#checkAll").prop("checked",false);
-// 				$("#list").attr("currentPath", newPath);
-// 				$("#navPath").append('<a href="#" onclick="return theClick(this)">' + newPath + '</a>');
 				$.each(data.data, function() {
 					$("#list").append('<tr><td><input onclick="selectCheckbox()" name="check_name" type="checkbox" aria-label="..."></td>' +
 						'<td width="60%"><a href="#" prePath="' + path +'" fileType="' + this.fileType +'" onclick="return openFile(this)"><span class="glyphicon glyphicon-'+this.fileType+'" style="margin-right: 10px"></span>' + this.fileName + '</a></td>' +
@@ -74,126 +70,26 @@ var currentPath;
 			}
 		});
 	}
+	/**文件路径导航点击事件*/
 	function theClick(obj) {
 		getFiles($(obj).attr("path"));
 		$(obj).nextAll().remove();
 		return false;
 	}
-
+	/**导航栏添加导航项*/
 	function navPath(path, currentPath) {
 		$("#navPath").append(
 				'<a href="#" path="' + path
 						+ '" onclick="return theClick(this)">&nbsp;'
 						+ currentPath + '&nbsp;&#62;</a>');
 	}
-
-	function navClick(obj) {
-		return false;
-	}
+	/**上传文件点击事件*/
 	function upload(obj) {
 		$("#input_file").click();
 		return false;
 	}
-	/*
-		下载文件
-	*/
-	function downloadFile(obj){
-		var $download = $("input:checked");
-		var downPath = "";
-		$.each($download.parent().next().children(),function(i,n){
-			downPath += "&downPath=" + $(this).text();
-		});
-		if($download.length <= 0){
-			alert("必须选择一个");
-			$check.removeAttr("checked");
-		}else{
-			var url = "file/download.action";
-			 url += ("?currentPath=" + encodeURI(currentPath));
-			 url += downPath;
-			 $(obj).attr("href", url);
-			 return true;
-		}
-	}
-	/*
-	重命名文件名 
-	 */
-	function rename() {
-		//var check = $("#list input[checked]");
-		//调用
-		var $check = $("input[name='check_name']:checked");
-		if ($check.length > 1 || $check.length <= 0) {
-			alert("必须选择一个");
-			$check.removeAttr("checked");
-		}else{
-		    //alert($check.parent().next().children().text());
-			layer.prompt({title: '重命名'}, function(destName, index){
-				  $.post("file/renameDirectory.action",{
-					  "currentPath":currentPath,
-					  "srcName":$check.parent().next().children().text(),
-					  "destName":destName
-				  },function(data){
-					  if(data.success == true){
-						  layer.msg('重命名成功');
-						  layer.close(index);
-						  getFiles(currentPath);
-					  }
-				  });
-			});
-		}
-		return false;
-	}
 
-	/*
-	 删除文件 */
-	function deleteall() {
-		var $id = $("input[name='check_name']:checked");
-		var check = new Array();
-		if($id.length < 1){
-			alert("请选择至少一个");
-		}else{
-			$.each($id.parent().next().children(),function(i,n){
-				check[i] = $(this).text();
-			});
-			//alert($id.parent().next().children().text());
-			layer.confirm('确认删除？', {
-				  btn: ['确认','返回'] //按钮
-				}, function(){
-					$.ajax({
-						type:"POST",
-						url:"file/delDirectory.action",
-						data:{
-							"currentPath":currentPath,
-							"directoryName":check
-						},
-						success:function(data){
-							layer.msg(data.msg);
-							getFiles(currentPath);
-						},
-						traditional:true
-					});
-				}, function(){
-				  
-				});
-		}
-		return false;
-	}
-
-	//新建文件夹 
- 	function buildfile(){
-		layer.prompt({title: '新建文件夹'}, function(filename, index){
-			  $.post("file/addDirectory.action",{
-				  "currentPath":currentPath,
-				  "directoryName":filename
-			  },function(data){
-				  layer.msg('新建文件夹'+filename+'成功');
-				  layer.close(index);
-				  getFiles(currentPath);
-			  });
-		});
-		return false;
-	}
-	
-	//上传文件*upload()
+	/**上传文件*upload()*/
 	function upload(){
 		var files = document.getElementById("input").files;
 		       
@@ -228,64 +124,102 @@ var currentPath;
 			},
 	    });  
 	}
-	//分享
-	function share(obj){
-		var $check = $("input:checked").not($("#checkAll"));
-		if($check.length < 1){
-			alert("请选择至少一个");
+	/**
+		下载文件
+	*/
+	function downloadFile(obj){
+		var $download = $("input:checked");
+		var downPath = "";
+		$.each($download.parent().next().children(),function(i,n){
+			downPath += "&downPath=" + $(this).text();
+		});
+		if($download.length <= 0){
+			alert("必须选择一个");
+			$check.removeAttr("checked");
 		}else{
-			var shareFiles = $check.parent().next().children();
-			var shareFile = new Array();
-			for(var i = 0; i < shareFiles.length; i++){
-				shareFile[i] = $(shareFiles[i]).text();
-			}
-			$.ajax({
-				type:"POST",
-				url:"shareFile.action",
-				data:{
-					"currentPath":currentPath,
-					"shareFile":shareFile
-				},
-				traditional:true
-				,success:function(data){
-					layer.open({
-						  title: '分享',
-						  content: '<input id="url" value="' + joinUrl(data.data) + '" class="form-control" readonly="readonly"/>'
-						  ,btn: ['复制到粘贴板', '返回'],
-						  area: ['500px', '200px']
-						  ,yes: function(index, layero){ 
-						    //按钮【按钮一】的回调
-							  copyUrl($("#url"));
-						  },end: function(index, layero){ 
-							$("input:checkbox").prop("checked", false);  
-						  } 
-					});
-				}
+			var url = "file/download.action";
+			 url += ("?currentPath=" + encodeURI(currentPath));
+			 url += downPath;
+			 $(obj).attr("href", url);
+			 return true;
+		}
+	}
+	/**
+	重命名文件名 
+	 */
+	function rename() {
+		var $check = $("input[name='check_name']:checked");
+		if ($check.length > 1 || $check.length <= 0) {
+			alert("必须选择一个");
+			$check.removeAttr("checked");
+		}else{
+			layer.prompt({title: '重命名'}, function(destName, index){
+				  $.post("file/renameDirectory.action",{
+					  "currentPath":currentPath,
+					  "srcName":$check.parent().next().children().text(),
+					  "destName":destName
+				  },function(data){
+					  if(data.success == true){
+						  layer.msg('重命名成功');
+						  layer.close(index);
+						  getFiles(currentPath);
+					  }
+				  });
 			});
 		}
 		return false;
-	} 
-	function copyUrl(obj){
-		  obj.select();
-		  var successful = document.execCommand('copy');
-		  if(successful){
-			  layer.tips('复制成功', obj, {tips: 3});
-		  }
 	}
-	function joinUrl(url){
-		var host = window.location.href;
-		host = host.substring(0, host.indexOf("/yun") + 5);
-		return host + "share.action?shareUrl=" + url;
-	}
-	/* for(var i=0; i< files.length; i++){
-		alert(input.files[i].name);
-	}	 */
-	//添加新功能
-	//功能2
-	//其他功能
-	//测试
 
-	/* 复制文件及文件夹 */
+	/**
+	 删除文件 */
+	function deleteall() {
+		var $id = $("input[name='check_name']:checked");
+		var check = new Array();
+		if($id.length < 1){
+			alert("请选择至少一个");
+		}else{
+			$.each($id.parent().next().children(),function(i,n){
+				check[i] = $(this).text();
+			});
+			//alert($id.parent().next().children().text());
+			layer.confirm('确认删除？', {
+				  btn: ['确认','返回'] //按钮
+				}, function(){
+					$.ajax({
+						type:"POST",
+						url:"file/delDirectory.action",
+						data:{
+							"currentPath":currentPath,
+							"directoryName":check
+						},
+						success:function(data){
+							layer.msg(data.msg);
+							getFiles(currentPath);
+						},
+						traditional:true
+					});
+				}, function(){
+				  
+				});
+		}
+		return false;
+	}
+
+	/**新建文件夹 */
+ 	function buildfile(){
+		layer.prompt({title: '新建文件夹'}, function(filename, index){
+			  $.post("file/addDirectory.action",{
+				  "currentPath":currentPath,
+				  "directoryName":filename
+			  },function(data){
+				  layer.msg('新建文件夹'+filename+'成功');
+				  layer.close(index);
+				  getFiles(currentPath);
+			  });
+		});
+		return false;
+	}
+	/** 复制文件及文件夹 */
 	function copyto(){
 		var $id = $("input:checked");
 		var cancopy = "yes";
@@ -312,9 +246,6 @@ var currentPath;
 				yes: function(index,layero){
 					var tree = layer.getChildFrame('.chooseup > .path',index);
 					targetdirectorypath = tree.html();
-// 							alert(targetdirectorypath + "---" + currentPath);
-// 								\\music  music
-// 								\music\aaa  music\aaa
 					$.each($id.parent().next().children(), function(i, n) {
 						check[i] = $(this).text();
 					});
@@ -342,7 +273,7 @@ var currentPath;
 		}
 		return false;
 	}
-	/* 移动文件及文件夹 */
+	/** 移动文件及文件夹 */
 	function moveto(){
 		var $id = $("input:checked");
 		var canmove = "yes";
@@ -413,7 +344,7 @@ var currentPath;
 		}
 		return false;
 	}
-
+	/**查找文件*/
 	function searchFile(obj){
 		var reg = $(obj).prev().val();
 		if(reg.trim() == "" || reg.trim() == null){
@@ -446,6 +377,58 @@ var currentPath;
 			});
 		}
 	}
+	/**分享文件*/
+	function share(obj){
+		var $check = $("input:checked").not($("#checkAll"));
+		if($check.length < 1){
+			alert("请选择至少一个");
+		}else{
+			var shareFiles = $check.parent().next().children();
+			var shareFile = new Array();
+			for(var i = 0; i < shareFiles.length; i++){
+				shareFile[i] = $(shareFiles[i]).text();
+			}
+			$.ajax({
+				type:"POST",
+				url:"shareFile.action",
+				data:{
+					"currentPath":currentPath,
+					"shareFile":shareFile
+				},
+				traditional:true
+				,success:function(data){
+					layer.open({
+						  title: '分享',
+						  content: '<input id="url" value="' + joinUrl(data.data) + '" class="form-control" readonly="readonly"/>'
+						  ,btn: ['复制到粘贴板', '返回'],
+						  area: ['500px', '200px']
+						  ,yes: function(index, layero){ 
+						    //按钮【按钮一】的回调
+							  copyUrl($("#url"));
+						  },end: function(index, layero){ 
+							$("input:checkbox").prop("checked", false);  
+						  } 
+					});
+				}
+			});
+		}
+		return false;
+	} 
+	/**copy Url到粘贴板*/
+	function copyUrl(obj){
+		  obj.select();
+		  var successful = document.execCommand('copy');
+		  if(successful){
+			  layer.tips('复制成功', obj, {tips: 3});
+		  }
+	}
+	/**拼接url*/
+	function joinUrl(url){
+		var host = window.location.href;
+		host = host.substring(0, host.indexOf("/yun") + 5);
+		return host + "share.action?shareUrl=" + url;
+	}
+	/**打开我的分享*/
 	function openMyShare(){
 		changeShareTab(1);
 		layer.open({ 
@@ -455,6 +438,7 @@ var currentPath;
 			  content: $("#shareTab")
 			});
 	}
+	/**分享面板切换*/
 	function changeShareTab(order){
 		$.post("searchShare.action",{
 			  "status":order
@@ -477,6 +461,7 @@ var currentPath;
 		);
 		return false;
 	}
+	/**取消分享/删除分享*/
 	function cancelShare(obj){
 		var url = $(obj).attr("url");
 		var filePath = $(obj).attr("filePath");
@@ -492,6 +477,7 @@ var currentPath;
 			}
 		});
 	}
+	/**查找文件*/
 	function searchFileType(type){
 		var tabName = type + "Tab";
 		$("#fileTypeList li").has("a[aria-controls='"+tabName+"']").addClass("active").siblings().removeClass("active");
@@ -506,6 +492,7 @@ var currentPath;
 			});
 		return false;
 	}
+	/**切换文件类型*/
 	function changeTypeTab(type){
 		$.post("file/searchFile.action", {
 			"regType" : type
@@ -528,6 +515,7 @@ var currentPath;
 		});
 		return false;
 	}
+	/**分类型打开文件*/
 	function openFile(obj) {
 		var fileType = $(obj).attr("filetype")
 		var fileName = $(obj).text();

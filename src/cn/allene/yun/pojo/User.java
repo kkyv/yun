@@ -1,5 +1,9 @@
 package cn.allene.yun.pojo;
-
+/**
+ * 用户实体类
+ * @author Frank
+ *
+ */
 public class User {
 	public static final String NAMESPACE = "username";
 	
