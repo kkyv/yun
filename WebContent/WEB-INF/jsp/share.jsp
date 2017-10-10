@@ -96,6 +96,9 @@
 		window.location.reload();
 		return false;
 	}
+	/**
+	多文件下载选择下载
+	*/
 	function downloadFileSelect(obj){
 		var $download = $("input:checked");
 		var downPath = "";
@@ -113,6 +116,9 @@
 			return download(obj, downPath);
 		}
 	}
+	/**
+	 * 单文件下载按钮下载
+	 */
 	function downloadFile(obj){
 		$file = $(obj).parent().prev().children();
 		var path = $file.attr("path");
@@ -121,6 +127,9 @@
 		}
 		return download(obj, "&downPath="+ escape(path));
 	}
+	/*
+	下载
+	*/
 	function download(obj, path){
 		var url = "file/download.action?";
 		url += ("currentPath=" + encodeURI(currentPath));

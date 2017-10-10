@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -40,16 +42,20 @@ public class FileService {
 	/**
 	 * 新用户注册默认文件夹
 	 */
-	public static final String[] DEFAULT_DIRECTORY = { "vido", "music", "source", "image", User.RECYCLE};
+	public static final String[] DEFAULT_DIRECTORY = { "vido", "music", "source", "image", User.RECYCLE };
 	@Autowired
 	private UserDao userDao;
 	@Autowired
 	private FileDao fileDao;
+
 	/**
 	 * 上传文件
+	 * 
 	 * @param request
-	 * @param files			文件
-	 * @param currentPath	当前路径
+	 * @param files
+	 *            文件
+	 * @param currentPath
+	 *            当前路径
 	 * @throws Exception
 	 */
 	public void uploadFilePath(HttpServletRequest request, MultipartFile[] files, String currentPath) throws Exception {
@@ -57,12 +63,13 @@ public class FileService {
 			String fileName = file.getOriginalFilename();
 			String filePath = getFileName(request, currentPath);
 			File distFile = new File(filePath, fileName);
-			if(!distFile.exists()){
+			if (!distFile.exists()) {
 				file.transferTo(distFile);
-				if("office".equals(FileUtils.getFileType(distFile))){
+				if ("office".equals(FileUtils.getFileType(distFile))) {
 					try {
 						String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
-						String documentId = FileUtils.getDocClient().createDocument(distFile, fileName, suffix).getDocumentId();
+						String documentId = FileUtils.getDocClient().createDocument(distFile, fileName, suffix)
+								.getDocumentId();
 						officeDao.addOffice(documentId, FileUtils.MD5(distFile));
 					} catch (Exception e) {
 					}
@@ -71,8 +78,10 @@ public class FileService {
 		}
 		reSize(request);
 	}
+
 	/**
 	 * 删除压缩文件包
+	 * 
 	 * @param downloadFile
 	 */
 	public void deleteDownPackage(File downloadFile) {
@@ -80,13 +89,18 @@ public class FileService {
 			downloadFile.delete();
 		}
 	}
+
 	/**
 	 * 下载文件打包
+	 * 
 	 * @param request
-	 * @param currentPath	当前路径
-	 * @param fileNames		文件名
-	 * @param username		用户名
-	 * @return				打包的文件对象
+	 * @param currentPath
+	 *            当前路径
+	 * @param fileNames
+	 *            文件名
+	 * @param username
+	 *            用户名
+	 * @return 打包的文件对象
 	 * @throws Exception
 	 */
 	public File downPackage(HttpServletRequest request, String currentPath, String[] fileNames, String username)
@@ -109,8 +123,10 @@ public class FileService {
 		downloadFile = new File(packageZipName);
 		return downloadFile;
 	}
+
 	/**
 	 * 压缩文件
+	 * 
 	 * @param sourcePath
 	 * @return
 	 * @throws Exception
@@ -124,14 +140,16 @@ public class FileService {
 				writeZos(new File(string), "", zos);
 			}
 		} finally {
-			if(zos != null){
+			if (zos != null) {
 				zos.close();
 			}
 		}
 		return zipName;
 	}
+
 	/**
 	 * 写入文件到压缩包
+	 * 
 	 * @param file
 	 * @param basePath
 	 * @param zos
@@ -160,8 +178,10 @@ public class FileService {
 			bis.close();
 		}
 	}
+
 	/**
 	 * 获取文件跟路径
+	 * 
 	 * @param request
 	 * @return
 	 */
@@ -169,16 +189,20 @@ public class FileService {
 		String rootPath = request.getSession().getServletContext().getRealPath("/") + PREFIX;
 		return rootPath;
 	}
+
 	/**
 	 * 获取回收站跟路径
+	 * 
 	 * @param request
 	 * @return
 	 */
-	public String getRecyclePath(HttpServletRequest request){
+	public String getRecyclePath(HttpServletRequest request) {
 		return getFileName(request, User.RECYCLE);
 	}
+
 	/**
 	 * 获取文件路径
+	 * 
 	 * @param request
 	 * @param fileName
 	 * @return
@@ -190,8 +214,10 @@ public class FileService {
 		String username = UserUtils.getUsername(request);
 		return getRootPath(request) + username + File.separator + fileName;
 	}
+
 	/**
 	 * 根据用户名获取文件路径
+	 * 
 	 * @param request
 	 * @param fileName
 	 * @param username
@@ -206,9 +232,12 @@ public class FileService {
 		}
 		return getRootPath(request) + username + File.separator + fileName;
 	}
+
 	/**
 	 * 获取路径下的文件类别
-	 * @param realPath	路径
+	 * 
+	 * @param realPath
+	 *            路径
 	 * @return
 	 */
 	public List<FileCustom> listFile(String realPath) {
@@ -216,12 +245,12 @@ public class FileService {
 		List<FileCustom> lists = new ArrayList<FileCustom>();
 		if (files != null) {
 			for (File file : files) {
-				if(!file.getName().equals(User.RECYCLE)){
+				if (!file.getName().equals(User.RECYCLE)) {
 					FileCustom custom = new FileCustom();
 					custom.setFileName(file.getName());
 					custom.setLastTime(FileUtils.formatTime(file.lastModified()));
-					/*保存文件的删除前路径以及当前路径*/
-//					custom.setFilePath(prePath);
+					/* 保存文件的删除前路径以及当前路径 */
+					// custom.setFilePath(prePath);
 					custom.setCurrentPath(realPath);
 					if (file.isDirectory()) {
 						custom.setFileSize("-");
@@ -235,18 +264,24 @@ public class FileService {
 		}
 		return lists;
 	}
-//
-//	public List<FileCustom> searchFile(HttpServletRequest request, String currentPath, String reg) {
-//		List<FileCustom> list = new ArrayList<>();
-//		matchFile(list, new File(getFileName(request, currentPath)), reg, "");
-//		return list;
-//	}
+
+	//
+	// public List<FileCustom> searchFile(HttpServletRequest request, String
+	// currentPath, String reg) {
+	// List<FileCustom> list = new ArrayList<>();
+	// matchFile(list, new File(getFileName(request, currentPath)), reg, "");
+	// return list;
+	// }
 	/**
 	 * 查找文件
+	 * 
 	 * @param request
-	 * @param currentPath	当前路径
-	 * @param reg			文件名字
-	 * @param regType		文件类型
+	 * @param currentPath
+	 *            当前路径
+	 * @param reg
+	 *            文件名字
+	 * @param regType
+	 *            文件类型
 	 * @return
 	 */
 	public List<FileCustom> searchFile(HttpServletRequest request, String currentPath, String reg, String regType) {
@@ -254,7 +289,9 @@ public class FileService {
 		matchFile(request, list, new File(getFileName(request, currentPath)), reg, regType == null ? "" : regType);
 		return list;
 	}
-	private void matchFile(HttpServletRequest request, List<FileCustom> list, File dirFile, String reg, String regType) {
+
+	private void matchFile(HttpServletRequest request, List<FileCustom> list, File dirFile, String reg,
+			String regType) {
 		File[] listFiles = dirFile.listFiles();
 		if (listFiles != null) {
 			for (File file : listFiles) {
@@ -265,7 +302,8 @@ public class FileService {
 						custom.setFileName(file.getName());
 						custom.setLastTime(FileUtils.formatTime(file.lastModified()));
 						String parentPath = file.getParent();
-						String prePath = parentPath.substring(parentPath.indexOf(getFileName(request, null)) + getFileName(request, null).length());
+						String prePath = parentPath.substring(
+								parentPath.indexOf(getFileName(request, null)) + getFileName(request, null).length());
 						custom.setCurrentPath(File.separator + prePath);
 						if (file.isDirectory()) {
 							custom.setFileSize("-");
@@ -281,10 +319,14 @@ public class FileService {
 			}
 		}
 	}
+
 	/**
 	 * 移动的文件列表
-	 * @param realPath	路径
-	 * @param number	该路径下的文件数量
+	 * 
+	 * @param realPath
+	 *            路径
+	 * @param number
+	 *            该路径下的文件数量
 	 * @return
 	 */
 	public SummaryFile summarylistFile(String realPath, int number) {
@@ -317,33 +359,36 @@ public class FileService {
 		}
 		return sF;
 	}
+
 	/**
 	 * 新建文件夹
+	 * 
 	 * @param request
-	 * @param currentPath	当前路径
-	 * @param directoryName	文件夹名
+	 * @param currentPath
+	 *            当前路径
+	 * @param directoryName
+	 *            文件夹名
 	 * @return
 	 */
 	public boolean addDirectory(HttpServletRequest request, String currentPath, String directoryName) {
 		File file = new File(getFileName(request, currentPath), directoryName);
 		return file.mkdir();
 	}
-	
-	
+
 	/*--回收站显示所有删除文件--*/
-	public List<RecycleFile> recycleFiles(HttpServletRequest request) throws Exception{
+	public List<RecycleFile> recycleFiles(HttpServletRequest request) throws Exception {
 		List<RecycleFile> recycleFiles = fileDao.selectFiles(UserUtils.getUsername(request));
-		for(RecycleFile file : recycleFiles){
+		for (RecycleFile file : recycleFiles) {
 			File f = new File(getRecyclePath(request), new File(file.getFilePath()).getName());
 			file.setFileName(f.getName());
 			file.setLastTime(FileUtils.formatTime(f.lastModified()));
 		}
 		return recycleFiles;
 	}
-	
-	/*删除回收站的文件*/
-	public void delRecycle(HttpServletRequest request,int[] fileId) throws Exception{	
-		for (int i = 0;i < fileId.length;i++) {
+
+	/* 删除回收站的文件 */
+	public void delRecycle(HttpServletRequest request, int[] fileId) throws Exception {
+		for (int i = 0; i < fileId.length; i++) {
 			RecycleFile selectFile = fileDao.selectFile(fileId[i]);
 			File srcFile = new File(getRecyclePath(request), selectFile.getFilePath());
 			fileDao.deleteFile(fileId[i], UserUtils.getUsername(request));
@@ -351,22 +396,26 @@ public class FileService {
 		}
 		reSize(request);
 	}
-	
+
 	/*--依次遍历recycle下各个文件，并删除--*/
-	public void delAllRecycle(HttpServletRequest request) throws Exception{
+	public void delAllRecycle(HttpServletRequest request) throws Exception {
 		File file = new File(getRecyclePath(request));
 		File[] inferiorFile = file.listFiles();
-		for(File f : inferiorFile){
+		for (File f : inferiorFile) {
 			delFile(f);
 		}
 		fileDao.deleteFiles(UserUtils.getUsername(request));
 		reSize(request);
 	}
+
 	/**
 	 * 删除文件
+	 * 
 	 * @param request
-	 * @param currentPath	当前路径
-	 * @param directoryName	文件名
+	 * @param currentPath
+	 *            当前路径
+	 * @param directoryName
+	 *            文件名
 	 * @throws Exception
 	 */
 	public void delDirectory(HttpServletRequest request, String currentPath, String[] directoryName) throws Exception {
@@ -377,14 +426,15 @@ public class FileService {
 			org.apache.commons.io.FileUtils.moveToDirectory(src, dest, true);
 			fileDao.insertFiles(srcPath, UserUtils.getUsername(request));
 			/*--将删除文件移动到recycle目录下*/
-//			moveDirectory(request,currentPath,directoryName,User.RECYCLE);			
+			// moveDirectory(request,currentPath,directoryName,User.RECYCLE);
 		}
 		/*--获取文件删除前的路径--*/
 		reSize(request);
 	}
-	/*还原文件*/
-	public void revertDirectory(HttpServletRequest request,int[] fileId) throws Exception{
-		for(int id : fileId){
+
+	/* 还原文件 */
+	public void revertDirectory(HttpServletRequest request, int[] fileId) throws Exception {
+		for (int id : fileId) {
 			RecycleFile file = fileDao.selectFile(id);
 			String fileName = new File(file.getFilePath()).getName();
 			File src = new File(getRecyclePath(request), fileName);
@@ -393,16 +443,19 @@ public class FileService {
 			fileDao.deleteFile(id, UserUtils.getUsername(request));
 		}
 	}
+
 	/**
 	 * 删除文件
-	 * @param srcFile	源文件
+	 * 
+	 * @param srcFile
+	 *            源文件
 	 * @throws Exception
 	 */
 	private void delFile(File srcFile) throws Exception {
 		/* 如果是文件，直接删除 */
-		
+
 		if (!srcFile.isDirectory()) {
-			/* 使用map 存储删除的 文件路径，同时保存用户名*/
+			/* 使用map 存储删除的 文件路径，同时保存用户名 */
 			srcFile.delete();
 			return;
 		}
@@ -421,8 +474,10 @@ public class FileService {
 			srcFile.delete();
 		}
 	}
+
 	/**
 	 * 重命名文件
+	 * 
 	 * @param request
 	 * @param currentPath
 	 * @param srcName
@@ -434,8 +489,10 @@ public class FileService {
 		File descFile = new File(getFileName(request, currentPath), destName);
 		return file.renameTo(descFile);
 	}
+
 	/**
 	 * 新用户新建文件
+	 * 
 	 * @param request
 	 * @param namespace
 	 */
@@ -448,9 +505,12 @@ public class FileService {
 			newFile.mkdir();
 		}
 	}
+
 	/**
 	 * copy文件
-	 * @param srcFile	源文件
+	 * 
+	 * @param srcFile
+	 *            源文件
 	 * @param targetFile目标文件
 	 * @throws IOException
 	 */
@@ -476,12 +536,52 @@ public class FileService {
 			}
 		}
 	}
+
+	public void copyDirectory(HttpServletRequest request, String currentPath, String[] directoryName,
+			String targetdirectorypath) throws Exception {
+		// TODO Auto-generated method stub
+		for (String srcName : directoryName) {
+			File srcFile = new File(getFileName(request, currentPath), srcName);
+			File targetFile = new File(getFileName(request, targetdirectorypath), srcName);
+			/* 处理目标目录中存在同名文件或文件夹问题 */
+			String srcname = srcName;
+			String prefixname = "";
+			String targetname = "";
+			if (targetFile.exists()) {
+				String[] srcnamesplit = srcname.split("\\)");
+				if (srcnamesplit.length > 1) {
+					String intstring = srcnamesplit[0].substring(1);
+					Pattern pattern = Pattern.compile("[0-9]*");
+					Matcher isNum = pattern.matcher(intstring);
+					if (isNum.matches()) {
+						srcname = srcname.substring(srcnamesplit[0].length() + 1);
+					}
+				}
+				for (int i = 1; true; i++) {
+					prefixname = "(" + i + ")";
+					targetname = prefixname + srcname;
+					targetFile = new File(targetFile.getParent(), targetname);
+					if (!targetFile.exists()) {
+						break;
+					}
+				}
+				targetFile = new File(targetFile.getParent(), targetname);
+			}
+			/* 复制 */
+			copyfile(srcFile, targetFile);
+		}
+	}
+
 	/**
 	 * 移动文件
+	 * 
 	 * @param request
-	 * @param currentPath			当前路径
-	 * @param directoryName			文件名
-	 * @param targetdirectorypath	目标路径
+	 * @param currentPath
+	 *            当前路径
+	 * @param directoryName
+	 *            文件名
+	 * @param targetdirectorypath
+	 *            目标路径
 	 * @throws Exception
 	 */
 	public void moveDirectory(HttpServletRequest request, String currentPath, String[] directoryName,
@@ -491,29 +591,40 @@ public class FileService {
 			File srcFile = new File(getFileName(request, currentPath), srcName);
 			File targetFile = new File(getFileName(request, targetdirectorypath), srcName);
 			/* 处理目标目录中存在同名文件或文件夹问题 */
-			if (srcFile.isDirectory()) {
-				if (targetFile.exists()) {
-					for (int i = 1; !targetFile.mkdir(); i++) {
-						targetFile = new File(targetFile.getParentFile(), srcName + "(" + i + ")");
+			String srcname = srcName;
+			String prefixname = "";
+			String targetname = "";
+			if (targetFile.exists()) {
+				String[] srcnamesplit = srcname.split("\\)");
+				if (srcnamesplit.length > 1) {
+					String intstring = srcnamesplit[0].substring(1);
+					Pattern pattern = Pattern.compile("[0-9]*");
+					Matcher isNum = pattern.matcher(intstring);
+					if (isNum.matches()) {
+						srcname = srcname.substring(srcnamesplit[0].length() + 1);
 					}
-					;
 				}
-			} else {
-				if (targetFile.exists()) {
-					for (int i = 1; !targetFile.createNewFile(); i++) {
-						targetFile = new File(targetFile.getParentFile(), srcName + "(" + i + ")");
+				for (int i = 1; true; i++) {
+					prefixname = "(" + i + ")";
+					targetname = prefixname + srcname;
+					targetFile = new File(targetFile.getParent(), targetname);
+					if (!targetFile.exists()) {
+						break;
 					}
 				}
+				targetFile = new File(targetFile.getParent(), targetname);
 			}
-
 			/* 移动即先复制，再删除 */
 			copyfile(srcFile, targetFile);
 			delFile(srcFile);
 		}
 	}
+
 	/**
 	 * 递归统计用户文件大小
-	 * @param srcFile	位置
+	 * 
+	 * @param srcFile
+	 *            位置
 	 * @return
 	 */
 	private long countFileSize(File srcFile) {
@@ -531,8 +642,10 @@ public class FileService {
 		}
 		return count;
 	}
+
 	/**
 	 * 统计用户文件大小
+	 * 
 	 * @param request
 	 * @return
 	 */
@@ -540,8 +653,10 @@ public class FileService {
 		long countFileSize = countFileSize(new File(getFileName(request, null)));
 		return FileUtils.getDataSize(countFileSize);
 	}
+
 	/**
 	 * 重新计算文件大小
+	 * 
 	 * @param request
 	 */
 	public void reSize(HttpServletRequest request) {
@@ -553,29 +668,38 @@ public class FileService {
 
 		}
 	}
+
 	@Autowired
 	private OfficeDao officeDao;
+
 	/**
-	 * 响应文件流 
+	 * 响应文件流
+	 * 
 	 * @param response
 	 * @param request
-	 * @param currentPath	当前路径
-	 * @param fileName		文件名
-	 * @param type			文件类型
+	 * @param currentPath
+	 *            当前路径
+	 * @param fileName
+	 *            文件名
+	 * @param type
+	 *            文件类型
 	 * @throws IOException
 	 */
-	public void respFile(HttpServletResponse response, HttpServletRequest request, String currentPath, String fileName, String type) throws IOException {
+	public void respFile(HttpServletResponse response, HttpServletRequest request, String currentPath, String fileName,
+			String type) throws IOException {
 		File file = new File(getFileName(request, currentPath), fileName);
 		InputStream inputStream = new FileInputStream(file);
-		if("docum".equals(type)){
+		if ("docum".equals(type)) {
 			response.setCharacterEncoding("UTF-8");
 			IOUtils.copy(inputStream, response.getWriter(), "UTF-8");
-		}else{
+		} else {
 			IOUtils.copy(inputStream, response.getOutputStream());
 		}
 	}
+
 	/**
 	 * 打开文档文件
+	 * 
 	 * @param request
 	 * @param currentPath
 	 * @param fileName
@@ -583,6 +707,6 @@ public class FileService {
 	 * @throws Exception
 	 */
 	public String openOffice(HttpServletRequest request, String currentPath, String fileName) throws Exception {
-		 return officeDao.getOfficeId(FileUtils.MD5(new File(getFileName(request, currentPath), fileName)));
+		return officeDao.getOfficeId(FileUtils.MD5(new File(getFileName(request, currentPath), fileName)));
 	}
 }

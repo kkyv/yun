@@ -58,10 +58,10 @@ var currentPath;
 				$.each(data.data, function() {
 					$("#list").append('<tr><td><input onclick="selectCheckbox()" name="check_name" type="checkbox" aria-label="..."></td>' +
 						'<td width="60%"><a href="#" prePath="' + path +'" fileType="' + this.fileType +'" onclick="return openFile(this)"><span class="glyphicon glyphicon-'+this.fileType+'" style="margin-right: 10px"></span>' + this.fileName + '</a></td>' +
-						'<td width="32px"><a href="#" class="glyphicon glyphicon-share"' +
-						'title="分享"></a></td>' +
+						'<td width="32px">' +
+						'</td>' +
 						'<td width="32px"><a href="#"' +
-						'class="glyphicon glyphicon-download-alt" title="下载"></a></td>' +
+						'class="glyphicon glyphicon-download-alt" title="下载" onclick="return downloadFile(this)"></a></td>' +
 						'<td width="32px"><a href="#"' +
 						'class="glyphicon glyphicon-option-horizontal" title="更多"></a></td>' +
 						'<td>' + this.fileSize + '</td>' +
@@ -125,9 +125,9 @@ var currentPath;
 	    });  
 	}
 	/**
-		下载文件
+	多文件下载选择下载
 	*/
-	function downloadFile(obj){
+	function downloadFileSelect(obj){
 		var $download = $("input:checked");
 		var downPath = "";
 		$.each($download.parent().next().children(),function(i,n){
@@ -135,14 +135,31 @@ var currentPath;
 		});
 		if($download.length <= 0){
 			alert("必须选择一个");
-			$check.removeAttr("checked");
+			$download.removeAttr("checked");
 		}else{
-			var url = "file/download.action";
-			 url += ("?currentPath=" + encodeURI(currentPath));
-			 url += downPath;
-			 $(obj).attr("href", url);
-			 return true;
+			return download(obj, downPath);
 		}
+	}
+	/**
+	 * 单文件下载按钮下载
+	 */
+	function downloadFile(obj){
+		$file = $(obj).parent().prev().prev().children();
+		var path = $file.attr("path");
+		if(path==null){
+			path = $file.text();
+		}
+		return download(obj, "&downPath="+ escape(path));
+	}
+	/**
+	 * 下载
+	 */
+	function download(obj, path){
+		var url = "file/download.action?";
+		url += ("currentPath=" + encodeURI(currentPath));
+		url += path;
+		$(obj).attr("href", url);
+		return true;
 	}
 	/**
 	重命名文件名 
@@ -153,18 +170,24 @@ var currentPath;
 			alert("必须选择一个");
 			$check.removeAttr("checked");
 		}else{
-			layer.prompt({title: '重命名'}, function(destName, index){
-				  $.post("file/renameDirectory.action",{
-					  "currentPath":currentPath,
-					  "srcName":$check.parent().next().children().text(),
-					  "destName":destName
-				  },function(data){
-					  if(data.success == true){
-						  layer.msg('重命名成功');
-						  layer.close(index);
-						  getFiles(currentPath);
-					  }
-				  });
+			var srcName = $check.parent().next().children().text();
+			layer.prompt({title: '重命名', value : srcName}, function(destName, index){
+				  if(destName.trim() == ""){
+					  layer.close(index);
+					  layer.msg('名字不合法，修改失败！');
+				  }else{
+					  $.post("file/renameDirectory.action",{
+						  "currentPath":currentPath,
+						  "srcName": srcName,
+						  "destName":destName
+					  },function(data){
+						  if(data.success == true){
+							  layer.msg('重命名成功');
+							  layer.close(index);
+							  getFiles(currentPath);
+						  }
+					  });
+				  }
 			});
 		}
 		return false;
@@ -364,10 +387,10 @@ var currentPath;
 					$.each(data.data, function() {
 						$("#list").append('<tr><td><input onclick="selectCheckbox()" name="check_name" type="checkbox" aria-label="..."></td>' +
 							'<td width="60%"><a href="#" prePath="' + this.currentPath +'" fileType="' + this.fileType +'" onclick="return openFile(this)">' + this.fileName + '</a></td>' +
-							'<td width="32px"><a href="#" class="glyphicon glyphicon-share"' +
-							'title="分享"></a></td>' +
+							'<td width="32px">' +
+							'</td>' +
 							'<td width="32px"><a href="#"' +
-							'class="glyphicon glyphicon-download-alt" title="下载"></a></td>' +
+							'class="glyphicon glyphicon-download-alt" title="下载" onclick="return downloadFile(this)"></a></td>' +
 							'<td width="32px"><a href="#"' +
 							'class="glyphicon glyphicon-option-horizontal" title="更多"></a></td>' +
 							'<td>' + this.fileSize + '</td>' +
