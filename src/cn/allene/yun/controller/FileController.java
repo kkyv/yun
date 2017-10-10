@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import cn.allene.yun.pojo.FileCustom;
+import cn.allene.yun.pojo.RecycleFile;
 import cn.allene.yun.pojo.Result;
 import cn.allene.yun.pojo.User;
 import cn.allene.yun.pojo.summaryFile;
@@ -103,6 +104,7 @@ public class FileController {
 			fileService.delDirectory(request, currentPath, directoryName);
 			return new Result<>(346, true, "删除成功");
 		} catch (Exception e) {
+			e.printStackTrace();
 			return new Result<>(341, false, "删除失败");
 		}
 	}
@@ -118,16 +120,6 @@ public class FileController {
 		}
 	}
 	
-	@RequestMapping("/copyDirectory")
-	public @ResponseBody Result<String> copyDirectory(String currentPath, String[] directoryName, String targetdirectorypath) throws Exception{
-		
-		try {
-			fileService.copyDirectory(request,currentPath, directoryName, targetdirectorypath);
-			return new Result<>(366, true, "复制成功");
-		} catch (IOException e) {
-			return new Result<>(361, true, "复制失败");
-		}
-	}
 	@RequestMapping("/moveDirectory")
 	public @ResponseBody Result<String> moveDirectory(String currentPath, String[] directoryName, String targetdirectorypath) throws Exception{
 		
@@ -180,7 +172,7 @@ public class FileController {
 	@RequestMapping("/openOffice")
 	public @ResponseBody Result<String> openOffice(String currentPath, String fileName, String fileType){
 		try {
-			String openOffice = fileService.openOffice(request, currentPath, fileName);
+			String openOffice = fileService.openOffice(currentPath, fileName, fileType);
 			if(openOffice != null){
 				Result<String> result = new Result<>(505, true, "打开成功");
 				result.setData(openOffice);
@@ -196,20 +188,34 @@ public class FileController {
 	@RequestMapping("/recycleFile")
 	public String recycleFile(){
 		try{
-		List<FileCustom> findDelFile = fileService.recycleFile(request);
-		request.setAttribute("findDelFile", findDelFile);
+		List<RecycleFile> findDelFile = fileService.recycleFiles(request);
+		if(null != findDelFile && findDelFile.size() != 0){
+			request.setAttribute("findDelFile", findDelFile);
+		}
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 		return "recycle";
 	}
 	
-	/* --删除回收站文件--
+	/* --删除回收站多个文件--
 	 * --获取当前路径以及文件名--*/
-	@RequestMapping("/delRecycleDirectory")
-	public @ResponseBody Result<String> delRecycleDirectory(String filePath[] ,String[] directoryName){
+	@RequestMapping("/delRecycle")
+	public @ResponseBody Result<String> delRecycleDirectory(int fileId[]){
 		try {
-			fileService.delRecycleDirectory(request, filePath[0],directoryName);
+			fileService.delRecycle(request, fileId);
+			return new Result<>(327, true, "删除成功");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new Result<>(322, false, "删除失败");
+		}
+	}
+	
+	/* --清空回收站--*/
+	@RequestMapping("/delAllRecycle")
+	public @ResponseBody Result<String> delAllRecycleDirectory(){
+		try {
+			fileService.delAllRecycle(request);
 			return new Result<>(327, true, "删除成功");
 		} catch (Exception e) {
 			return new Result<>(322, false, "删除失败");
@@ -219,9 +225,9 @@ public class FileController {
 	/* --还原回收站文件--
 	 * --获取目的路径以及文件名--*/
 	@RequestMapping("/revertDirectory")
-	public @ResponseBody Result<String> revertDirectory(String[] directoryName, String targetdirectorypath){
+	public @ResponseBody Result<String> revertDirectory(int[] fileId){
 		try {
-			fileService.moveDirectory(request,User.RECYCLE,directoryName,targetdirectorypath);
+			fileService.revertDirectory(request,fileId);
 			return new Result<>(327, true, "还原成功");
 		} catch (Exception e) {
 			return new Result<>(322, false, "还原失败");

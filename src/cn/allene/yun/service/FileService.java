@@ -10,8 +10,6 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -23,13 +21,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.baidubce.services.doc.model.CreateDocumentResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import cn.allene.yun.dao.FileDao;
 import cn.allene.yun.dao.OfficeDao;
 import cn.allene.yun.dao.UserDao;
 import cn.allene.yun.pojo.FileCustom;
-import cn.allene.yun.pojo.Result;
+import cn.allene.yun.pojo.RecycleFile;
 import cn.allene.yun.pojo.User;
 import cn.allene.yun.pojo.summaryFile;
 import cn.allene.yun.utils.FileUtils;
@@ -43,12 +39,9 @@ public class FileService {
 	public static String prePath = null;
 	@Autowired
 	private UserDao userDao;
-	
-	/*--回收站显示所有删除文件--*/
-	public List<FileCustom> recycleFile(HttpServletRequest request) throws Exception{
-		return listFile(getFileName(request, User.RECYCLE));
-	}
-	
+	@Autowired
+	private FileDao fileDao;
+
 	public void uploadFilePath(HttpServletRequest request, MultipartFile[] files, String currentPath) throws Exception {
 		for (MultipartFile file : files) {
 			String fileName = file.getOriginalFilename();
@@ -58,9 +51,9 @@ public class FileService {
 				file.transferTo(distFile);
 				if("office".equals(FileUtils.getFileType(distFile))){
 					try {
-						String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
-						String documentId = FileUtils.getDocClient().createDocument(distFile, fileName, suffix).getDocumentId();
-						officeDao.addOffice(documentId, FileUtils.MD5(distFile));
+//						String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+//						String documentId = FileUtils.getDocClient().createDocument(distFile, fileName, suffix).getDocumentId();
+						officeDao.addOffice("doc-hi2m3psn08i4smn", currentPath + File.separator + fileName);
 					} catch (Exception e) {
 					}
 				}
@@ -141,6 +134,10 @@ public class FileService {
 		return rootPath;
 	}
 
+	public String getRecyclePath(HttpServletRequest request){
+		return getFileName(request, User.RECYCLE);
+	}
+	
 	public String getFileName(HttpServletRequest request, String fileName) {
 		if (fileName == null) {
 			fileName = "";
@@ -240,9 +237,7 @@ public class FileService {
 			for (File filex : file.listFiles()) {
 				summaryFile innersF = summarylistFile(filex.getPath(), number);
 				if (!innersF.getisFile()) {
-					if(!innersF.getfileName().equals("recycle")){
-						returnlist.add(innersF);
-					}
+					returnlist.add(innersF);
 				}
 			}
 			sF.setListFile(returnlist);
@@ -260,23 +255,65 @@ public class FileService {
 		return file.mkdir();
 	}
 	
-	/*--依次遍历recycle下各个文件，并删除--*/
-	public void delRecycleDirectory(HttpServletRequest request, String currentPath, String[] directoryName) throws Exception{	
-		for (String delName : directoryName) {
-			File srcFile = new File(currentPath + File.separator + delName);
+	
+	/*--回收站显示所有删除文件--*/
+	public List<RecycleFile> recycleFiles(HttpServletRequest request) throws Exception{
+		List<RecycleFile> recycleFiles = fileDao.selectFiles(UserUtils.getUsername(request));
+		for(RecycleFile file : recycleFiles){
+			File f = new File(getRecyclePath(request), new File(file.getFilePath()).getName());
+			file.setFileName(f.getName());
+			file.setLastTime(FileUtils.formatTime(f.lastModified()));
+		}
+		return recycleFiles;
+	}
+	
+	
+	public void delRecycle(HttpServletRequest request,int[] fileId) throws Exception{	
+		for (int i = 0;i < fileId.length;i++) {
+			RecycleFile selectFile = fileDao.selectFile(fileId[i]);
+			File srcFile = new File(getRecyclePath(request), selectFile.getFilePath());
+			fileDao.deleteFile(fileId[i], UserUtils.getUsername(request));
 			delFile(srcFile);
 		}
 		reSize(request);
 	}
 	
+	/*--依次遍历recycle下各个文件，并删除--*/
+	public void delAllRecycle(HttpServletRequest request) throws Exception{
+		File file = new File(getRecyclePath(request));
+		File[] inferiorFile = file.listFiles();
+		for(File f : inferiorFile){
+			delFile(f);
+		}
+		fileDao.deleteFiles(UserUtils.getUsername(request));
+		reSize(request);
+	}
+	
 	public void delDirectory(HttpServletRequest request, String currentPath, String[] directoryName) throws Exception {
+		for (String fileName : directoryName) {
+			String srcPath = currentPath + File.separator + fileName;
+			File src = new File(getFileName(request, srcPath));
+			File dest = new File(getRecyclePath(request));
+			org.apache.commons.io.FileUtils.moveToDirectory(src, dest, true);
+			fileDao.insertFiles(srcPath, UserUtils.getUsername(request));
+			/*--将删除文件移动到recycle目录下*/
+//			moveDirectory(request,currentPath,directoryName,User.RECYCLE);			
+		}
 		/*--获取文件删除前的路径--*/
-		prePath = currentPath;
-		/*--将删除文件移动到recycle目录下*/
-		moveDirectory(request,currentPath,directoryName,User.RECYCLE);
 		reSize(request);
 	}
 
+	public void revertDirectory(HttpServletRequest request,int[] fileId) throws Exception{
+		for(int id : fileId){
+			RecycleFile file = fileDao.selectFile(id);
+			String fileName = new File(file.getFilePath()).getName();
+			File src = new File(getRecyclePath(request), fileName);
+			File dest = new File(getFileName(request, file.getFilePath()));
+			org.apache.commons.io.FileUtils.moveToDirectory(src, dest.getParentFile(), true);
+			fileDao.deleteFile(id, UserUtils.getUsername(request));
+		}
+	}
+	
 	private void delFile(File srcFile) throws Exception {
 		/* 如果是文件，直接删除 */
 		
@@ -340,40 +377,6 @@ public class FileService {
 		}
 	}
 
-	public void copyDirectory(HttpServletRequest request, String currentPath, String[] directoryName,
-			String targetdirectorypath) throws Exception {
-		// TODO Auto-generated method stub
-		for (String srcName : directoryName) {
-			File srcFile = new File(getFileName(request, currentPath), srcName);
-			File targetFile = new File(getFileName(request, targetdirectorypath), srcName);
-			/* 处理目标目录中存在同名文件或文件夹问题 */
-			String srcname = srcName;
-			String prefixname = "";
-			String targetname = "" ;
-			if(targetFile.exists()){
-				String[] srcnamesplit = srcname.split("\\)");
-				if(srcnamesplit.length > 1){
-					String intstring = srcnamesplit[0].substring(1);
-					Pattern pattern = Pattern.compile("[0-9]*"); 
-					Matcher isNum = pattern.matcher(intstring);
-					if(isNum.matches()){
-						srcname = srcname.substring(srcnamesplit[0].length()+1);
-					}
-				}
-				for(int i = 1; true ; i++){
-					prefixname = "(" + i + ")";
-					targetname = prefixname + srcname ;
-					targetFile = new File(targetFile.getParent(), targetname);
-					if(!targetFile.exists()){
-						break;
-					}
-				}
-				targetFile = new File(targetFile.getParent(), targetname);
-			}
-			/* 复制 */
-			copyfile(srcFile, targetFile);
-		}
-	}
 	public void moveDirectory(HttpServletRequest request, String currentPath, String[] directoryName,
 			String targetdirectorypath) throws Exception {
 		// TODO Auto-generated method stub
@@ -381,28 +384,19 @@ public class FileService {
 			File srcFile = new File(getFileName(request, currentPath), srcName);
 			File targetFile = new File(getFileName(request, targetdirectorypath), srcName);
 			/* 处理目标目录中存在同名文件或文件夹问题 */
-			String srcname = srcName;
-			String prefixname = "";
-			String targetname = "" ;
-			if(targetFile.exists()){
-				String[] srcnamesplit = srcname.split("\\)");
-				if(srcnamesplit.length > 1){
-					String intstring = srcnamesplit[0].substring(1);
-					Pattern pattern = Pattern.compile("[0-9]*"); 
-					Matcher isNum = pattern.matcher(intstring);
-					if(isNum.matches()){
-						srcname = srcname.substring(srcnamesplit[0].length()+1);
+			if (srcFile.isDirectory()) {
+				if (targetFile.exists()) {
+					for (int i = 1; !targetFile.mkdir(); i++) {
+						targetFile = new File(targetFile.getParentFile(), srcName + "(" + i + ")");
+					}
+					;
+				}
+			} else {
+				if (targetFile.exists()) {
+					for (int i = 1; !targetFile.createNewFile(); i++) {
+						targetFile = new File(targetFile.getParentFile(), srcName + "(" + i + ")");
 					}
 				}
-				for(int i = 1; true ; i++){
-					prefixname = "(" + i + ")";
-					targetname = prefixname + srcname ;
-					targetFile = new File(targetFile.getParent(), targetname);
-					if(!targetFile.exists()){
-						break;
-					}
-				}
-				targetFile = new File(targetFile.getParent(), targetname);
 			}
 
 			/* 移动即先复制，再删除 */
@@ -454,7 +448,7 @@ public class FileService {
 		}
 	}
 
-	public String openOffice(HttpServletRequest request, String currentPath, String fileName) throws Exception {
-		return officeDao.getOfficeId(FileUtils.MD5(new File(getFileName(request, currentPath), fileName)));
+	public String openOffice(String currentPath, String fileName, String fileType) throws Exception {
+		return officeDao.getOfficeId(currentPath + File.separator + fileName);
 	}
 }
