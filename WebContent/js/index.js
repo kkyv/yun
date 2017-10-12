@@ -43,7 +43,7 @@ var currentPath;
 		}else{
 			countSizeNum = 0;
 		}
-		var percent = Math.round(countSizeNum * 100 / totalSizeNum) + "%";
+		var percent = (countSizeNum * 100 / totalSizeNum).toFixed(1) + "%";
 		$("#sizeprogress").css("width", percent).attr("aria-valuemax", totalSizeNum).text(percent);
 	}
 	/**获取文件列表*/
